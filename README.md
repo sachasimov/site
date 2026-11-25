@@ -47,6 +47,10 @@ The home page lists every essay and the 5 most recent links. `/feed.xml` covers 
 
 ## Deploy
 
-Configs for both hosts are included: `vercel.json` and `netlify.toml`. Both run `npm run build` and publish `dist/`.
+The site is hosted on GitHub Pages. `.github/workflows/pages.yml` builds and deploys it on every push to `main`.
 
-Before going live, set `url` in `site.json` (for example `"https://example.com"`). It makes the RSS feed links absolute and adds canonical tags. Until it's set, those links are relative.
+`url` in `site.json` is the live address. It makes feed links absolute, adds canonical tags, and sets the path prefix: `https://sachasimov.github.io/site` serves everything under `/site/`, while a bare domain like `https://2s2a1h.com` serves from `/`. `npm run serve` mirrors that prefix locally.
+
+To switch to a custom domain: set `url` to the domain, add `static/CNAME` containing the bare domain (e.g. `2s2a1h.com`), push, and point DNS at GitHub Pages.
+
+`vercel.json` and `netlify.toml` are kept as alternatives. Both run `npm run build` and publish `dist/`. Set `url` to the matching address if you switch hosts.

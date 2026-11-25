@@ -6,6 +6,8 @@ import { fileURLToPath } from 'node:url';
 
 const DIST = path.join(path.dirname(fileURLToPath(import.meta.url)), 'dist');
 const PORT = Number(process.argv[2] || process.env.PORT || 4000);
+const { url: siteUrl = '' } = JSON.parse(fs.readFileSync(path.join(DIST, '..', 'site.json'), 'utf8'));
+const BASE = siteUrl ? new URL(siteUrl).pathname.replace(/\/+$/, '') : '';
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -21,7 +23,10 @@ const TYPES = {
 
 http
   .createServer((req, res) => {
-    const urlPath = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+    let urlPath = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+    // Mirror the live base path (e.g. /site) so local preview matches production.
+    if (BASE && (urlPath === BASE || urlPath.startsWith(BASE + '/'))) urlPath = urlPath.slice(BASE.length) || '/';
+    else if (BASE) return res.writeHead(302, { Location: BASE + '/' }).end();
     let file = path.normalize(path.join(DIST, urlPath));
     if (!file.startsWith(DIST)) return res.writeHead(403).end();
     if (fs.existsSync(file) && fs.statSync(file).isDirectory()) {

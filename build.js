@@ -13,6 +13,9 @@ const DIST = path.join(ROOT, 'dist');
 
 const site = JSON.parse(fs.readFileSync(path.join(ROOT, 'site.json'), 'utf8'));
 const baseUrl = (site.url || '').replace(/\/+$/, '');
+// Path prefix when the site lives under a subpath (e.g. https://user.github.io/site → "/site").
+const BASE = baseUrl ? new URL(baseUrl).pathname.replace(/\/+$/, '') : '';
+const u = (p) => BASE + p;
 
 // ---------- helpers ----------
 
@@ -131,7 +134,7 @@ function layout({ title, description, current, body, canonical }) {
   const fullTitle = title ? `${title} — ${site.title}` : site.title;
   const nav = NAV.map(
     ([href, label]) =>
-      `<a href="${href}"${current === href ? ' aria-current="page"' : ''}>${label}</a>`
+      `<a href="${u(href)}"${current === href ? ' aria-current="page"' : ''}>${label}</a>`
   ).join('\n        ');
   return `<!doctype html>
 <html lang="${esc(site.language || 'en')}">
@@ -142,13 +145,13 @@ function layout({ title, description, current, body, canonical }) {
   <meta name="description" content="${esc(description || site.description || '')}">
   <meta name="color-scheme" content="light dark">
   ${baseUrl && canonical ? `<link rel="canonical" href="${esc(abs(canonical))}">` : ''}
-  <link rel="alternate" type="application/rss+xml" title="${esc(site.title)}" href="/feed.xml">
-  <link rel="stylesheet" href="/style.css">
+  <link rel="alternate" type="application/rss+xml" title="${esc(site.title)}" href="${u('/feed.xml')}">
+  <link rel="stylesheet" href="${u('/style.css')}">
 </head>
 <body>
   <div class="wrap">
     <header class="site-header">
-      <a class="site-title" href="/">${esc(site.title)}</a>
+      <a class="site-title" href="${u('/')}">${esc(site.title)}</a>
       <nav>
         ${nav}
       </nav>
@@ -157,7 +160,7 @@ function layout({ title, description, current, body, canonical }) {
 ${body}
     </main>
     <footer class="site-footer">
-      <a href="/feed.xml">RSS</a>
+      <a href="${u('/feed.xml')}">RSS</a>
     </footer>
   </div>
 </body>
@@ -171,7 +174,7 @@ const essayList = (essays) =>
 ${essays
   .map(
     (e) =>
-      `  <li><a href="${e.path}">${esc(e.title)}</a> <time datetime="${isoDay(e.date)}">${humanDate(e.date)}</time></li>`
+      `  <li><a href="${u(e.path)}">${esc(e.title)}</a> <time datetime="${isoDay(e.date)}">${humanDate(e.date)}</time></li>`
   )
   .join('\n')}
 </ul>`
@@ -271,7 +274,7 @@ ${essayList(essays)}
 <section>
 <h2>Recent links</h2>
 ${linkList(links.slice(0, 5))}
-${links.length > 5 ? '<p class="more"><a href="/links/">All links →</a></p>' : ''}
+${links.length > 5 ? `<p class="more"><a href="${u('/links/')}">All links →</a></p>` : ''}
 </section>`,
     })
   );
@@ -318,7 +321,7 @@ ${e.html}
 
   write(
     '404.html',
-    layout({ title: 'Not found', body: '<h1>Not found</h1>\n<p>That page doesn’t exist. <a href="/">Go home</a>.</p>' })
+    layout({ title: 'Not found', body: `<h1>Not found</h1>\n<p>That page doesn’t exist. <a href="${u('/')}">Go home</a>.</p>` })
   );
 
   write('feed.xml', rss(essays, links));
